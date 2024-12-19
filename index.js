@@ -38,6 +38,16 @@ async function run() {
       const result = await jobsCollection.findOne(query);
       res.send(result);
     });
+
+    //applications related apis
+    const applicationsCollection = client
+      .db("jobPortal")
+      .collection("applications");
+    app.post("/applications", async (req, res) => {
+      const application = req.body;
+      const result = await applicationsCollection.insertOne(application);
+      res.send(result);
+    });
   } finally {
   }
 }
