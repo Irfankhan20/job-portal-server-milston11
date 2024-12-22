@@ -26,34 +26,44 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
-    //jobs related apis
+    //(jobs related apis)=========================================================
     const jobsCollection = client.db("jobPortal").collection("jobs");
+
+    // all jobs get api
     app.get("/jobs", async (req, res) => {
       const result = await jobsCollection.find().toArray();
       res.send(result);
     });
+
+    // jobs get by email api
     app.get("/job", async (req, res) => {
       const email = req.query.email;
       const query = { hr_email: email };
       const result = await jobsCollection.find(query).toArray();
       res.send(result);
     });
+
+    // jobs get by id api
     app.get("/jobs/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobsCollection.findOne(query);
       res.send(result);
     });
+
+    // jobs post api
     app.post("/jobs", async (req, res) => {
       const newJob = req.body;
       const result = await jobsCollection.insertOne(newJob);
       res.send(result);
     });
 
-    //applications related apis
+    //(applications related apis)=================================================
     const applicationsCollection = client
       .db("jobPortal")
       .collection("applications");
+
+    // applications get by email
     app.get("/application", async (req, res) => {
       const email = req.query.email;
       const query = { applicant_email: email };
@@ -70,17 +80,21 @@ async function run() {
       }
       res.send(result);
     });
+
+    // applications get by job_id
     app.get("/job-applications/jobs/:job_id", async (req, res) => {
       const jobId = req.params.job_id;
       const query = { job_id: jobId };
       const result = await applicationsCollection.find(query).toArray();
       res.send(result);
     });
+
+    // applications post api & added applicationCount property to jobs datas
     app.post("/applications", async (req, res) => {
       const application = req.body;
       const result = await applicationsCollection.insertOne(application);
 
-      //   application count add to the job
+      //applicationCount property add to the job datas
       const id = application.job_id;
       const query = { _id: new ObjectId(id) };
       const job = await jobsCollection.findOne(query);
@@ -94,6 +108,16 @@ async function run() {
       const updateDoc = { $set: { applicationCount: newCount } };
       const updateResult = await jobsCollection.updateOne(filter, updateDoc);
 
+      res.send(result);
+    });
+
+    //patch applications datas api (status property added)
+    app.patch("/applications/:id", async (req, res) => {
+      const data = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = { $set: { status: data.status } };
+      const result = await applicationsCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
   } finally {
